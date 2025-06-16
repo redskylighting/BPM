@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+    <!-- Add styles here -->
+</head>
+<body>
+    <div class="main-content">
+        <div class="top-nav">
+            <h1>Superadmin Panel</h1>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+
+        <div class="container">
+            <h2>Add New Department</h2>
+            <form action="{{ url_for('add_department') }}" method="post">
+                <input type="text" name="department_name" placeholder="New Department Name" required>
+                <button type="submit">Create Department</button>
+            </form>
+        </div>
+        
+        <div class="container">
+            <h2>Manage Departments</h2>
+            <table>
+                <thead><tr><th>Department Name</th><th>Actions</th></tr></thead>
+                <tbody>
+                    {% for dept_name in departments %}
+                    <tr>
+                        <td><a href="{{ url_for('department_dashboard', department_name=dept_name) }}">{{ dept_name }}</a></td>
+                        <td>
+                            <form action="{{ url_for('delete_department', department_name=dept_name) }}" method="post" onsubmit="return confirm('DELETE this department?');">
+                                <button type="submit" class="button-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BPM System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <!-- Loop through departments -->
+            {% for dept_name, dept_data in departments.items() %}
+                <h2>{{ dept_name }}</h2>
+                <ul>
+                    <!-- Loop through menus in each department -->
+                    {% for menu in dept_data.menus %}
+                    <li><a href="{{ url_for('department_page', department_name=dept_name, menu_name=menu) }}">{{ menu }}</a></li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content-area">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

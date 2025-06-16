@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview: {{ filename }}</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
+        .preview-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        img, embed { max-width: 100%; max-height: 100%; }
+        .fallback { text-align: center; padding: 40px; }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        {% set file_ext = filename.split('.')[-1].lower() %}
+        {% set file_url = url_for('send_from_directory', directory=config.UPLOAD_FOLDER + '/' + department_name, path=filename) %}
+
+        {% if file_ext in ['png', 'jpg', 'jpeg', 'gif', 'webp'] %}
+            <!-- It's an image -->
+            <img src="{{ file_url }}" alt="Preview of {{ filename }}">
+        {% elif file_ext == 'pdf' %}
+            <!-- It's a PDF -->
+            <embed src="{{ file_url }}" type="application/pdf" width="100%" height="100%">
+        {% else %}
+            <!-- Fallback for other file types -->
+            <div class="fallback">
+                <h2>Cannot preview this file type ({{ file_ext }})</h2>
+                <p>You can download it to view it.</p>
+                <a href="{{ url_for('download_file', department_name=department_name, filename=filename) }}" style="padding:10px 15px; background-color:#007bff; color:white; text-decoration:none; border-radius:5px;">
+                    Download {{ filename }}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
