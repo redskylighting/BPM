@@ -9,17 +9,15 @@
         h1 { text-align: center; color: #343a40; margin-bottom: 25px; }
         input[type="text"], input[type="password"] { display: block; width: 94%; padding: 12px; margin-bottom: 15px; border: 1px solid #ced4da; border-radius: 5px; font-size: 16px;}
         button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: 500;}
-        button:hover { background-color: #0056b3;}
-        .flash { padding: 1rem; margin-bottom: 1rem; border-radius: 5px; border: 1px solid transparent; text-align: center; }
+        .flash { padding: 1rem; margin-bottom: 1rem; border-radius: 5px; text-align: center; }
         .flash.danger { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
         .flash.info { color: #055160; background-color: #cff4fc; border-color: #b6effb; }
-        .flash.success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
     </style>
 </head>
 <body>
     <div class="login-box">
         <h1>BPM System Login</h1>
-        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
         <form method="post" action="{{ url_for('login') }}">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>

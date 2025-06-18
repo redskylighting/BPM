@@ -3,24 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <title>Search Results for "{{ query }}"</title>
-    <!-- Add styles here -->
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px;}
+        .main-content { max-width: 900px; margin: auto; }
+        .container { border: 1px solid #dee2e6; padding: 20px; margin-bottom: 25px; border-radius: 8px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .result-item { border-bottom: 1px solid #e9ecef; padding: 15px 0; }
+        .result-item:last-child { border-bottom: none; }
+        .result-item h3 { margin: 0 0 5px 0; }
+        .result-item h3 a { text-decoration: none; color: #0056b3; }
+        .result-item h3 a:hover { text-decoration: underline; }
+        .context { color: #495057; margin-top: 5px; line-height: 1.5; font-size: 14px; }
+        .context mark { background-color: #ffe082; padding: 1px 3px; border-radius: 3px;}
+        .breadcrumb { font-size: 14px; color: #6c757d; margin-bottom: 5px; }
+        .type-badge { font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 12px; color: white; background-color: #6c757d; margin-left: 10px; display: inline-block;}
+        .type-badge.content { background-color: #007bff; }
+        .type-badge.file { background-color: #28a745; }
+    </style>
 </head>
 <body>
     <div class="main-content">
-        <p><a href="{{ url_for('department_dashboard', department_name=session.get('department', '')) }}">← Back to Dashboard</a></p>
+        <!-- This link logic correctly handles all user roles for the "Back" button -->
+        {% if user and user.role == 'superadmin' %}
+            <p><a href="{{ url_for('admin_panel') }}">← Back to Admin Panel</a></p>
+        {% elif user and user.department %}
+            <p><a href="{{ url_for('department_dashboard', department_name=user.department.name) }}">← Back to Dashboard</a></p>
+        {% endif %}
+        
         <h1>Search Results for: "<em>{{ query }}</em>"</h1>
+        
         <div class="container">
             {% if results %}
                 <p>Found {{ results|length }} result(s).</p>
                 {% for result in results %}
                 <div class="result-item">
-                    <p class="breadcrumb">In: <strong>{{ result.department }}</strong> > <strong>{{ result.menu_name }}</strong></p>
-                    <h3><a href="{{ result.url }}">{{ result.menu_name }}</a></h3>
-                    <div class="context">...{{ result.context|safe }}...</div>
+                    <h3>
+                        <a href="{{ result.url }}">
+                            <!-- For content, show the menu title. For files, show the filename. -->
+                            {% if result.type == 'Content' %}
+                                {{ result.menu }}
+                            {% else %}
+                                {{ result.context }}
+                            {% endif %}
+                        </a>
+                        <!-- Display a helpful badge to distinguish result types -->
+                        {% if result.type == 'Content' %}<span class="type-badge content">Content</span>{% endif %}
+                        {% if result.type == 'File' %}<span class="type-badge file">File</span>{% endif %}
+                    </h3>
+                    <p class="breadcrumb">In Department: <strong>{{ result.department }}</strong> > Menu: <strong>{{ result.menu }}</strong></p>
+                    
+                    <!-- Only show a text snippet for Content results -->
+                    {% if result.type == 'Content' and result.context %}
+                    <div class="context">
+                        ...{{ result.context|safe }}...
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             {% else %}
-                <p>No content matched your query.</p>
+                <p>No content matching your search query was found.</p>
             {% endif %}
         </div>
     </div>

@@ -2,43 +2,81 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Panel</title>
-    <!-- Add styles here -->
+    <title>Global Admin Panel</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px;}
+        .main-content { max-width: 800px; margin: auto; }
+        .container { border: 1px solid #dee2e6; padding: 20px; margin-bottom: 25px; border-radius: 8px; background: white; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid #e9ecef; text-align: left;}
+        th { background-color: #f8f9fa;}
+        button, .button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: 500; }
+        input[type="text"] { padding: 8px; border: 1px solid #ced4da; border-radius: 5px; margin-right: 5px;}
+        .button-primary { background-color: #007bff;}
+        .button-secondary { background-color: #6c757d; }
+        .top-nav { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .inactive { opacity: 0.6; color: #6c757d; }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .status-dot.active { background-color: #28a745; }
+        .status-dot.deactivated { background-color: #6c757d; }
+        .flash { padding: 1rem; margin-bottom: 1rem; border-radius: 5px; text-align: center; }
+        .flash.success { color: #0f5132; background-color: #d1e7dd; }
+        .flash.danger { color: #842029; background-color: #f8d7da; }
+    </style>
 </head>
 <body>
     <div class="main-content">
         <div class="top-nav">
-            <h1>Superadmin Panel</h1>
-            <a href="{{ url_for('logout') }}">Logout</a>
+            <h1>Global Admin Panel</h1>
+            <a href="{{ url_for('logout') }}" class="button button-secondary">Logout</a>
         </div>
-        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}
+        {% endwith %}
 
         <div class="container">
             <h2>Add New Department</h2>
             <form action="{{ url_for('add_department') }}" method="post">
                 <input type="text" name="department_name" placeholder="New Department Name" required>
-                <button type="submit">Create Department</button>
+                <button type="submit" class="button-primary">Create Department</button>
             </form>
         </div>
         
         <div class="container">
             <h2>Manage Departments</h2>
             <table>
-                <thead><tr><th>Department Name</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Status</th><th>Department Name</th><th style="text-align: right;">Actions</th></tr></thead>
                 <tbody>
-                    {% for dept_name in departments %}
-                    <tr>
-                        <td><a href="{{ url_for('department_dashboard', department_name=dept_name) }}">{{ dept_name }}</a></td>
+                    <!-- THE FIX IS HERE: We loop through the list of objects directly -->
+                    {% for dept in departments %}
+                    <tr class="{% if not dept.active %}inactive{% endif %}">
                         <td>
-                            <form action="{{ url_for('delete_department', department_name=dept_name) }}" method="post" onsubmit="return confirm('DELETE this department?');">
-                                <button type="submit" class="button-danger">Delete</button>
+                            <span class="status-dot {% if dept.active %}active{% else %}deactivated{% endif %}"></span>
+                            {{ 'Active' if dept.active else 'Inactive' }}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('department_dashboard', department_name=dept.name) }}">{{ dept.name }}</a>
+                        </td>
+                        <td style="text-align: right;">
+                            <!-- THE FIX IS HERE: We use `dept.id` which the route expects -->
+                            <form action="{{ url_for('toggle_department_status', department_id=dept.id) }}" method="post">
+                                <button type="submit" class="button button-secondary">
+                                    {{ 'Deactivate' if dept.active else 'Activate' }}
+                                </button>
                             </form>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr><td colspan="3">No departments exist. Add one above.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        {% if departments %}
+            <p><a href="{{ url_for('department_dashboard', department_name=departments[0].name) }}">Return to Main View →</a></p>
+        {% endif %}
     </div>
 </body>
 </html>

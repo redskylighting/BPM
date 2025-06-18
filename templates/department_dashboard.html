@@ -3,92 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ department_name }} Dashboard</title>
+    <title>{{ department.name }} Dashboard</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; margin: 0; }
         .flex-container { display: flex; }
         .sidebar { width: 280px; border-right: 1px solid #dee2e6; padding: 20px; height: 100vh; position: sticky; top: 0; background-color: #ffffff; display:flex; flex-direction: column; }
-        .sidebar-nav { flex-grow: 1;}
+        .sidebar-nav { flex-grow: 1; overflow-y: auto;}
         .main-content { flex-grow: 1; padding: 30px; }
-        .container { border: 1px solid #dee2e6; padding: 20px; margin-bottom: 25px; border-radius: 8px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        h1, h2, h3 { color: #343a40; }
-        button, .button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;}
+        .container { border: 1px solid #dee2e6; padding: 20px; margin-bottom: 25px; border-radius: 8px; background: white; }
+        h1, h2 { color: #343a40; }
+        button, .button, .button-sm { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;}
         ul { list-style-type: none; padding-left: 20px; }
-        .menu-item .toggler { cursor: pointer; display: inline-block; width: 18px; text-align: center; }
-        .menu-item .toggler::before { content: '▸'; color: #6c757d; }
+        .menu-item { background: #f8f9fa; padding: 10px; border-left: 3px solid transparent; margin-top: 5px; border-radius: 4px; }
+        .menu-item .toggler { cursor: pointer; display: inline-block; width: 18px; text-align: center; user-select: none; }
+        .menu-item .toggler::before { content: '▸'; color: #6c757d; font-weight: bold;}
         .menu-item.open > div > span > .toggler::before { content: '▾'; }
         .menu-item ul { display: none; }
         .menu-item.open > ul { display: block; }
-        .menu-item { background: #f8f9fa; padding: 10px; border-left: 3px solid #f8f9fa; margin-top: 5px; border-radius: 4px; }
         .menu-item > div { display: flex; justify-content: space-between; align-items: center; }
         .menu-item > div > span > a { font-weight: 500; text-decoration: none; color: #0056b3; }
         .menu-item.inactive { opacity: 0.6; }
         .actions { display: flex; gap: 8px; }
-        .nav-header { text-transform: uppercase; font-size: 12px; font-weight: bold; color: #6c757d; margin: 25px 0 10px; }
-        .sidebar a { text-decoration: none; color: #495057; display: block; padding: 8px; border-radius: 5px;} .sidebar a:hover { background-color: #e9ecef;}
-        input[type="text"], input[type="search"], select { padding: 10px; border-radius: 5px; border: 1px solid #ced4da; }
-        .flash { padding: 1rem; margin-bottom: 1.5rem; border-radius: 5px; border: 1px solid transparent; }
+        .nav-header { text-transform: uppercase; font-size: 12px; font-weight: bold; color: #6c757d; margin: 25px 0 10px; padding-bottom: 5px; border-bottom: 1px solid #e9ecef;}
+        .sidebar-link { text-decoration: none; color: #495057; display: block; padding: 8px; border-radius: 5px;}
+        .sidebar-link:hover { background-color: #e9ecef;}
+        .sidebar-link.active { background-color: #007bff; color: white; font-weight: bold;}
+        .flash { padding: 1rem; margin-bottom: 1rem; border-radius: 5px; border: 1px solid transparent;}
+        .flash.danger { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
+        .flash.info { color: #055160; background-color: #cff4fc; border-color: #b6effb; }
         .flash.success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
+        input[type="text"], input[type="search"], select { padding: 10px; border-radius: 5px; border: 1px solid #ced4da; }
     </style>
 </head>
 <body>
     <div class="flex-container">
         <div class="sidebar">
             <div class="sidebar-nav">
-                <h3 class="nav-header">Search All Content</h3>
+                <h3 class="nav-header">Search Content</h3>
                 <form action="{{ url_for('search') }}" method="get" style="display: flex;">
                     <input type="search" name="query" placeholder="Search..." required style="flex-grow:1; border-top-right-radius: 0; border-bottom-right-radius: 0;">
                     <button type="submit" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Go</button>
                 </form>
+
+                {% if is_super_admin %}
+                <h3 class="nav-header">Administration</h3>
+                <a href="{{ url_for('admin_panel') }}" class="sidebar-link" style="background-color: #17a2b8; color: white;"><strong>Admin Panel</strong></a>
+                {% endif %}
+
                 <h3 class="nav-header">Departments</h3>
-                {% for dept in all_departments %}<a href="{{ url_for('department_dashboard', department_name=dept) }}" {% if dept == department_name %}style="background-color: #e9ecef; font-weight:bold;"{% endif %}>{{ dept }}</a>{% endfor %}
-                <h3 class="nav-header">Settings</h3>
-                <a href="{{ url_for('setup_page') }}">Account Setup</a>
+                <!-- THE FIX IS HERE: Looping through the list of department objects -->
+                {% for dept in all_departments %}
+                    <a href="{{ url_for('department_dashboard', department_name=dept.name) }}" class="sidebar-link {% if dept.name == department.name %}active{% endif %}">
+                        {{ dept.name }}
+                        {% if is_super_admin and not dept.active %}
+                            (Inactive)
+                        {% endif %}
+                    </a>
+                {% endfor %}
             </div>
-            <div><a href="{{ url_for('logout') }}" class="button" style="width:100%; text-align:center; box-sizing: border-box; background-color: #6c757d;">Logout</a></div>
+            <div>
+                <a href="{{ url_for('setup_page') }}" class="sidebar-link">Account Setup</a>
+                <a href="{{ url_for('logout') }}" class="sidebar-link" style="margin-top: 10px; background-color: #6c757d; color: white; text-align:center;">Logout</a>
+            </div>
         </div>
-
         <div class="main-content">
-            <h1>{{ department_name }} Department</h1>
-            {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
+            <h1>{{ department.name }} Department</h1>
+            
+            {% if department and not department.active %}
+            <div class="flash danger"><strong>This department is INACTIVE.</strong> It is only visible to superadmins.</div>
+            {% endif %}
 
+            {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
+            
             {% if can_edit %}
             <div class="container">
                 <h2>Add Menu or Sub-Menu</h2>
                 <form method="post">
                     <input type="text" name="new_menu_name" placeholder="New menu title" required style="width: 300px;">
-                    <select name="parent_menu_id" style="width: auto;"><option value="root">-- Add as Top-Level Menu --</option>{% for menu in flat_menu_list %}<option value="{{ menu.id }}">{{ menu.name }}</option>{% endfor %}</select>
+                    <select name="parent_menu_id" style="width: auto; padding: 10px;">
+                        <option value="root">-- Add as Top-Level Menu --</option>
+                        {% for menu in flat_menu_list %}
+                            <option value="{{ menu.id }}">{{ menu.name }}</option>
+                        {% endfor %}
+                    </select>
                     <button type="submit">Add Menu</button>
                 </form>
             </div>
             {% endif %}
-
+            
             <div class="container">
                 <h2>Menu Structure</h2>
-                {% macro render_menu_tree(menu_items) %}<ul>{% for item in menu_items %}{% if item.active or can_edit %}
-                    <li class="menu-item {% if not item.active %}inactive{% endif %} {% if item.children %}has-children{% endif %}">
-                        <div>
-                            <span>{% if item.children %}<span class="toggler"></span>{% endif %}<a href="{{ url_for('menu_content_page', department_name=department_name, menu_id=item.id) }}">{{ item.name }}</a>{% if not item.active %}<span style="color: #6c757d;"> (Inactive)</span>{% endif %}</span>
-                            {% if can_edit %}
-                            <div class="actions">
-                                <form method="post" action="{{ url_for('toggle_menu_status', department_name=department_name, menu_id=item.id) }}" style="display:inline;"><button class="button-sm" style="background-color: #6c757d;">{{'Deactivate' if item.active else 'Activate'}}</button></form>
-                                <form method="post" action="{{ url_for('delete_menu', department_name=department_name, menu_id=item.id) }}" style="display:inline;" onsubmit="return confirm('DELETE menu and all its content?');"><button class="button-sm" style="background-color: #dc3545;">Delete</button></form>
+                {% macro render_menu_tree(menu_items) %}
+                <ul>
+                    {% for item in menu_items %}
+                        {% if item.active or can_edit %}
+                        <li class="menu-item {% if not item.active %}inactive{% endif %} {% if item.children %}has-children{% endif %}">
+                            <div>
+                                <span>
+                                    {% if item.children %}<span class="toggler"></span>{% endif %}
+                                    <a href="{{ url_for('menu_content_page', department_name=department.name, menu_id=item.id) }}">{{ item.name }}</a>
+                                    {% if not item.active %}<span style="color: #6c757d;"> (Inactive)</span>{% endif %}
+                                </span>
+                                {% if can_edit %}
+                                <div class="actions">
+                                    <form method="post" action="{{ url_for('toggle_menu_status', menu_id=item.id) }}" style="display:inline;"><button class="button-sm" style="background-color: #6c757d; padding: 5px 8px; font-size: 12px;">{{'Deactivate' if item.active else 'Activate'}}</button></form>
+                                    <!-- This delete button is just an example, the route isn't defined -->
+                                    <!-- <form onsubmit="return confirm('Delete?');"><button class="button-sm button-danger">Delete</button></form> -->
+                                </div>
+                                {% endif %}
                             </div>
+                            {% if item.children %}
+                                {{ render_menu_tree(item.children) }}
                             {% endif %}
-                        </div>
-                        {% if item.children %}{{ render_menu_tree(item.children) }}{% endif %}
-                    </li>
-                {% endif %}{% endfor %}</ul>{% endmacro %}
-                {{ render_menu_tree(department_menu) }}
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                {% endmacro %}
+
+                {% if top_level_menus %}
+                    {{ render_menu_tree(top_level_menus) }}
+                {% else %}
+                    <p>No menus have been created for this department yet.</p>
+                {% endif %}
             </div>
         </div>
     </div>
 <script>
-    document.querySelectorAll('.has-children .toggler').forEach(toggler => {
+    document.querySelectorAll('.menu-item.has-children .toggler').forEach(toggler => {
         toggler.addEventListener('click', event => {
             event.preventDefault();
-            const parentLi = event.target.closest('.menu-item');
-            parentLi.classList.toggle('open');
+            event.target.closest('.menu-item').classList.toggle('open');
         });
     });
 </script>

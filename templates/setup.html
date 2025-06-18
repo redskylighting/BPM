@@ -3,38 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <title>User Setup</title>
-    <!-- Use same minimal CSS as login page -->
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-        .container { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; border-radius: 10px; }
-        input { display: block; width: 95%; padding: 8px; margin-bottom: 10px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px;}
+        .main-content { max-width: 600px; margin: 50px auto; }
+        .container { border: 1px solid #dee2e6; padding: 20px; margin-bottom: 20px; border-radius: 8px; background: white;}
+        input[type="text"] { display: block; width: 95%; padding: 10px; margin-bottom: 10px; border: 1px solid #ced4da; border-radius: 5px; }
         button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        a { color: #007bff; }
-        .flash { padding: 10px; margin-bottom: 15px; border-radius: 5px; }
-        .success { background-color: #d4edda; color: #155724; } .danger { background-color: #f8d7da; color: #721c24; }
+        .flash { padding: 1rem; margin-bottom: 1rem; border-radius: 5px; text-align: center; }
+        .flash.success { color: #0f5132; background-color: #d1e7dd; } .flash.danger { color: #842029; background-color: #f8d7da; }
     </style>
 </head>
 <body>
-    <h1>User Setup for {{ username }}</h1>
-    <p><a href="{{ url_for('department_dashboard', department_name=department_name) }}">← Back to Dashboard</a></p>
-    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
-    
-    <div class="container">
-        <h2>Change Username</h2>
-        <form method="post">
-            <label for="new_username">New Username:</label>
-            <input type="text" id="new_username" name="new_username" required>
-            <button type="submit">Change Username</button>
-        </form>
-    </div>
+    <div class="main-content">
+        <h1>User Setup for {{ username }}</h1>
 
-    <div class="container">
-        <h2>Forgot Password?</h2>
-        <p>Click to send a password reminder to your registered email.</p>
-        <form method="post">
-            <input type="hidden" name="forgot_password" value="1">
-            <button type="submit">Send Password Reminder</button>
-        </form>
+        <!-- THIS LINK IS NOW CORRECTED -->
+        {% if is_super_admin %}
+            <p><a href="{{ url_for('admin_panel') }}">← Back to Admin Panel</a></p>
+        {% elif department_name %}
+            <p><a href="{{ url_for('department_dashboard', department_name=department_name) }}">← Back to Dashboard</a></p>
+        {% endif %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}
+            {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+        {% endif %}{% endwith %}
+
+        <div class="container">
+            <h2>Change Username</h2>
+            <form method="post">
+                <label for="new_username">New Username:</label>
+                <input type="text" id="new_username" name="new_username" required>
+                <button type="submit">Change Username</button>
+            </form>
+        </div>
+
+        <div class="container">
+            <h2>Forgot Password?</h2>
+            <p>Click to send a password reminder to your registered email.</p>
+            <form method="post">
+                <input type="hidden" name="forgot_password" value="1">
+                <button type="submit">Send Password Reminder</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

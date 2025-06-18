@@ -3,71 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content: {{ menu_item.name }}</title>
+    <title>Content: {{ menu.name }}</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px;}
         .main-content { max-width: 900px; margin: auto; }
         .container { border: 1px solid #dee2e6; padding: 20px; margin-bottom: 25px; border-radius: 8px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .container-flex { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        li.content-item { list-style: none; margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 5px; }
-        li.content-item div.content { margin-top: 15px; padding-top: 15px; border-top: 1px solid #e9ecef;}
-        li.inactive { opacity: 0.6; }
-        .content table { border-collapse: collapse; width: 100%; margin: 1em 0; } .content th, .content td { border: 1px solid #ccc; padding: 8px; } .content img { max-width: 100%; height: auto; }
+        .post-item { list-style: none; margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 5px; }
+        .post-content { margin-top: 15px; padding-top: 15px; border-top: 1px solid #e9ecef;}
+        .post-attachments ul { list-style-type: disc; padding-left: 20px; margin-top: 5px; }
+        .inactive { opacity: 0.6; }
+        .post-content table { border-collapse: collapse; width: 100%; margin: 1em 0; } .post-content th, .post-content td { border: 1px solid #ccc; padding: 8px; } .post-content img { max-width: 100%; height: auto; }
         .actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
         .flash { padding: 1rem; margin-bottom: 1.5rem; border-radius: 5px; border: 1px solid transparent; font-weight: 500; }
         .flash.danger { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
         ul {padding: 0;}
+        button, .button-sm { padding: 8px 12px; border:none; border-radius:5px; color:white; cursor:pointer; text-decoration: none; display:inline-block; }
+        .button-sm { font-size: 13px; padding: 5px 10px; }
     </style>
     <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>tinymce.init({selector: 'textarea#rich-text-editor', plugins: 'paste lists link image table code help wordcount', toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | indent outdent | bullist numlist | code | help', paste_data_images: true, height: 400 });</script>
 </head>
 <body>
     <div class="main-content">
-        <p><a href="{{ url_for('department_dashboard', department_name=department_name) }}" style="text-decoration: none;">← Back to Dashboard</a></p>
-        <h1>Content for: {{ menu_item.name }}</h1>
-        {% if not menu_item.active %}<div class="flash danger">This menu is INACTIVE. It is only visible to admins.</div>{% endif %}
+        <p><a href="{{ url_for('department_dashboard', department_name=menu.department.name) }}" style="text-decoration: none;">← Back to Dashboard</a></p>
+        <h1>Content for: {{ menu.name }}</h1>
+        {% if not menu.active %}<div class="flash danger">This menu is INACTIVE. It is only visible to admins.</div>{% endif %}
 
         {% if can_edit %}
         <div class="container">
-            <h2>Add New Content / Process</h2>
-            <form method="post"><input type="hidden" name="action" value="add_post"><textarea id="rich-text-editor" name="content"></textarea><button type="submit" style="margin-top: 10px;">Save Content</button></form>
-        </div>
-        <div class="container">
-            <h3>Upload File Attachment</h3>
-            <form method="post" enctype="multipart/form-data"><input type="hidden" name="action" value="add_file"><input type="file" name="file" required><button type="submit">Upload</button></form>
+            <h2>Add New Post</h2>
+            <form method="post" enctype="multipart/form-data">
+                <h4>Rich Text Content</h4>
+                <textarea id="rich-text-editor" name="content"></textarea>
+                <h4 style="margin-top: 20px;">Attach Files (optional)</h4>
+                <input type="file" name="files[]" multiple>
+                <button type="submit" style="margin-top: 10px; background-color:#007bff;">Save Post</button>
+            </form>
         </div>
         {% endif %}
 
         <div class="container">
             <h2>Content & Processes</h2>
             <ul>
-                {% for post in menu_item.posts %}{% if post.active or can_edit %}
-                <li class="content-item {% if not post.active %}inactive{% endif %}">
-                    {% if can_edit %}
-                    <div class="actions">
-                        <form method="post" action="{{ url_for('toggle_post', department_name=department_name, menu_id=menu_item.id, post_id=post.id) }}"><button class="button-sm" style="background-color: #6c757d;">{{'Deactivate' if post.active else 'Activate'}}</button></form>
-                        <form method="post" action="{{ url_for('delete_post', department_name=department_name, menu_id=menu_item.id, post_id=post.id) }}" onsubmit="return confirm('Delete this content?');"><button class="button-sm" style="background-color: #dc3545;">Delete</button></form>
-                    </div>{% endif %}
-                    <div class="content">{{ post.content | safe }}</div>
-                </li>
-                {% endif %}{% else %}<li>No content has been added yet.</li>{% endfor %}
-            </ul>
-        </div>
-        <div class="container">
-            <h2>File Attachments</h2>
-            <ul>
-                {% for file in menu_item.files %}{% if file.active or can_edit %}
-                <li class="content-item {% if not file.active %}inactive{% endif %}" style="flex-direction: row; justify-content: space-between; align-items: center;">
-                    <span>{{ file.filename }}</span>
-                    <div class="actions">
-                        <a href="{{ url_for('download_file', department_name=department_name, menu_id=menu_item.id, filename=file.filename) }}" class="button-sm">Download</a>
+                {% for post in menu.posts|sort(attribute='id', reverse=True) %}
+                  {% if post.active or can_edit %}
+                    <li id="post-{{ post.id }}" class="post-item {% if not post.active %}inactive{% endif %}">
                         {% if can_edit %}
-                        <form method="post" action="{{ url_for('toggle_file', department_name=department_name, menu_id=menu_item.id, file_id=file.id) }}"><button class="button-sm" style="background-color: #6c757d;">{{'Deactivate' if file.active else 'Activate'}}</button></form>
-                        <form method="post" action="{{ url_for('delete_file', department_name=department_name, menu_id=menu_item.id, file_id=file.id) }}" onsubmit="return confirm('Delete this file?');"><button class="button-sm" style="background-color: #dc3545;">Delete</button></form>
+                        <div class="actions">
+                            <form method="post" action="{{ url_for('toggle_post_status', post_id=post.id) }}"><button type="submit" class="button-sm" style="background-color:#6c757d;">{{'Deactivate' if post.active else 'Activate'}}</button></form>
+                        </div>
                         {% endif %}
-                    </div>
-                </li>
-                {% endif %}{% else %}<li>No files attached.</li>{% endfor %}
+                        
+                        {% if post.rich_content %}
+                            <div class="post-content">{{ post.rich_content | safe }}</div>
+                        {% endif %}
+
+                        {% if post.attachments %}
+                        <div class="post-attachments" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc;">
+                            <strong>Attachments:</strong>
+                            <ul>
+                                {% for attachment in post.attachments %}
+                                    <!-- THE FIX IS HERE: The link now correctly uses `file_id=attachment.id` -->
+                                    <li><a href="{{ url_for('download_file', file_id=attachment.id) }}">{{ attachment.filename }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </li>
+                  {% endif %}
+                {% else %}
+                  <li>No content has been added for this menu yet.</li>
+                {% endfor %}
             </ul>
         </div>
     </div>
