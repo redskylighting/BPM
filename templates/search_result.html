@@ -15,14 +15,13 @@
         .context { color: #495057; margin-top: 5px; line-height: 1.5; font-size: 14px; }
         .context mark { background-color: #ffe082; padding: 1px 3px; border-radius: 3px;}
         .breadcrumb { font-size: 14px; color: #6c757d; margin-bottom: 5px; }
-        .type-badge { font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 12px; color: white; background-color: #6c757d; margin-left: 10px; display: inline-block;}
+        .type-badge { font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 12px; color: white; display: inline-block; vertical-align: middle; margin-left: 10px;}
         .type-badge.content { background-color: #007bff; }
         .type-badge.file { background-color: #28a745; }
     </style>
 </head>
 <body>
     <div class="main-content">
-        <!-- This link logic correctly handles all user roles for the "Back" button -->
         {% if user and user.role == 'superadmin' %}
             <p><a href="{{ url_for('admin_panel') }}">← Back to Admin Panel</a></p>
         {% elif user and user.department %}
@@ -37,30 +36,24 @@
                 {% for result in results %}
                 <div class="result-item">
                     <h3>
+                        <!-- FIX: For file results, the main link text is now the filename (from `result.context`) -->
                         <a href="{{ result.url }}">
-                            <!-- For content, show the menu title. For files, show the filename. -->
-                            {% if result.type == 'Content' %}
-                                {{ result.menu }}
-                            {% else %}
-                                {{ result.context }}
-                            {% endif %}
+                            {{ result.context if result.type == 'File' else result.menu }}
                         </a>
-                        <!-- Display a helpful badge to distinguish result types -->
                         {% if result.type == 'Content' %}<span class="type-badge content">Content</span>{% endif %}
                         {% if result.type == 'File' %}<span class="type-badge file">File</span>{% endif %}
                     </h3>
                     <p class="breadcrumb">In Department: <strong>{{ result.department }}</strong> > Menu: <strong>{{ result.menu }}</strong></p>
                     
-                    <!-- Only show a text snippet for Content results -->
-                    {% if result.type == 'Content' and result.context %}
+                    {% if result.type == 'Content' %}
                     <div class="context">
-                        ...{{ result.context|safe }}...
+                        {{ result.context|safe }}
                     </div>
                     {% endif %}
                 </div>
                 {% endfor %}
             {% else %}
-                <p>No content matching your search query was found.</p>
+                <p>No content or files matching your search query were found.</p>
             {% endif %}
         </div>
     </div>
