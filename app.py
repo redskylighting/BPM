@@ -55,6 +55,9 @@ def get_flat_menu_list(menus):
 # --- Page & Auth Routes ---
 @app.route('/', methods=['GET', 'POST'])
 def login():
+    # Show setup page if no departments exist
+    if Department.query.count() == 0:
+        return render_template('setup.html')
     if 'user_id' in session:
         user = db.session.get(User, session['user_id'])
         if user:
