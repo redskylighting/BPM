@@ -44,9 +44,13 @@ class Menu(db.Model):
 
     posts = relationship("Post", back_populates="menu", cascade="all, delete-orphan")
 
+
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     active = db.Column(db.Boolean, default=True, nullable=False)
+    
+    is_deleted = db.Column(db.Boolean, default=False, nullable=False)
+    
     rich_content = db.Column(db.Text, nullable=True)
     scraped_file_content = db.Column(db.Text, nullable=True)
     menu_id = db.Column(db.Integer, db.ForeignKey('menu.id'), nullable=False)
