@@ -10,41 +10,39 @@
         input[type="text"] { display: block; width: 95%; padding: 10px; margin-bottom: 10px; border: 1px solid #ced4da; border-radius: 5px; }
         button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
         .flash { padding: 1rem; margin-bottom: 1rem; border-radius: 5px; text-align: center; }
-        .flash.success { color: #0f5132; background-color: #d1e7dd; } .flash.danger { color: #842029; background-color: #f8d7da; }
+        .flash.success { color: #0f5132; background-color: #d1e7dd; } 
+        .flash.danger { color: #842029; background-color: #f8d7da; }
+        .flash.info { color: #055160; background-color: #cff4fc; }
+        .flash.warning { color: #664d03; background-color: #fff3cd; }
     </style>
 </head>
 <body>
     <div class="main-content">
-        <h1>User Setup for {{ username }}</h1>
+        <!-- user.username is now passed, which is safer -->
+        <h1>User Setup for {{ user.username }}</h1>
 
-        <!-- THIS LINK IS NOW CORRECTED -->
         {% if is_super_admin %}
             <p><a href="{{ url_for('admin_panel') }}">← Back to Admin Panel</a></p>
-        {% elif department_name %}
-            <p><a href="{{ url_for('department_dashboard', department_name=department_name) }}">← Back to Dashboard</a></p>
+        {% elif user.department %}
+            <p><a href="{{ url_for('department_dashboard', department_name=user.department.name) }}">← Back to Dashboard</a></p>
         {% endif %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}
-            {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
-        {% endif %}{% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}
+        {% endwith %}
 
         <div class="container">
             <h2>Change Username</h2>
             <form method="post">
                 <label for="new_username">New Username:</label>
-                <input type="text" id="new_username" name="new_username" required>
-                <button type="submit">Change Username</button>
+                <!-- Pre-fill the input with the current username for better UX -->
+                <input type="text" id="new_username" name="new_username" value="{{ user.username }}" required>
+                <button type="submit">Update Username</button>
             </form>
         </div>
 
-        <div class="container">
-            <h2>Forgot Password?</h2>
-            <p>Click to send a password reminder to your registered email.</p>
-            <form method="post">
-                <input type="hidden" name="forgot_password" value="1">
-                <button type="submit">Send Password Reminder</button>
-            </form>
-        </div>
+        <!-- THE FIX IS HERE: The "Forgot Password" container has been removed. -->
+
     </div>
 </body>
 </html>

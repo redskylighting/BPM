@@ -5,16 +5,18 @@
     <title>Global Admin Panel</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px;}
-        .main-content { max-width: 800px; margin: auto; }
+        .main-content { max-width: 950px; margin: auto; }
         .container { border: 1px solid #dee2e6; padding: 20px; margin-bottom: 25px; border-radius: 8px; background: white; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border-bottom: 1px solid #e9ecef; text-align: left;}
+        th, td { padding: 12px; border-bottom: 1px solid #e9ecef; text-align: left; vertical-align: middle;}
         th { background-color: #f8f9fa;}
-        button, .button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: 500; }
+        button, .button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: 500; font-size: 14px;}
         input[type="text"] { padding: 8px; border: 1px solid #ced4da; border-radius: 5px; margin-right: 5px;}
         .button-primary { background-color: #007bff;}
         .button-secondary { background-color: #6c757d; }
+        .button-danger { background-color: #dc3545; }
         .top-nav { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .actions-cell { display: flex; justify-content: flex-end; gap: 8px; }
         .inactive { opacity: 0.6; color: #6c757d; }
         .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         .status-dot.active { background-color: #28a745; }
@@ -29,39 +31,68 @@
         <div class="top-nav">
             <h1>Global Admin Panel</h1>
             <div>
-                <!-- Link to new User Management Page -->
                 <a href="{{ url_for('user_management') }}" class="button button-primary">Manage Users</a>
                 <a href="{{ url_for('logout') }}" class="button button-secondary">Logout</a>
             </div>
         </div>
         
-        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
+        <!-- THE FIX IS HERE: The form was missing -->
         <div class="container">
             <h2>Add New Department</h2>
-            <form action="{{ url_for('add_department') }}" method="post"><!-- ... form is unchanged ... --></form>
+            <form action="{{ url_for('add_department') }}" method="post">
+                <input type="text" name="department_name" placeholder="New Department Name" required>
+                <button type="submit" class="button-primary">Create Department</button>
+            </form>
         </div>
         
         <div class="container">
             <h2>Manage Departments</h2>
             <table>
-                <thead><tr><th>Status</th><th>Department Name</th><th style="text-align: right;">Actions</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Department Name</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% for dept in departments %}
-                    <tr>
-                        <td><!-- Status Indicator --></td>
+                    <tr class="{% if not dept.active %}inactive{% endif %}">
+                        <!-- THE FIX IS HERE: The status column was empty -->
                         <td>
-                            <!-- NEW FORM for editing department names -->
+                            <span class="status-dot {% if dept.active %}active{% else %}deactivated{% endif %}"></span>
+                            {{ 'Active' if dept.active else 'Inactive' }}
+                        </td>
+                        <td>
+                            <!-- Form to allow editing department name -->
                             <form action="{{ url_for('edit_department_name', department_id=dept.id) }}" method="post" style="display:flex; gap: 5px;">
                                 <input type="text" name="new_department_name" value="{{ dept.name }}" required>
                                 <button type="submit">Save</button>
-                                <a href="{{ url_for('department_dashboard', department_name=dept.name) }}" class="button" style="background-color: #555;">View</a>
                             </form>
                         </td>
-                        <td style="text-align: right;">
-                            <form action="{{ url_for('toggle_department_status', department_id=dept.id) }}" method="post"><!-- ... button is unchanged ... --></form>
+                        <td class="actions-cell">
+                            <!-- Button to view the dashboard for this department -->
+                            <a href="{{ url_for('department_dashboard', department_name=dept.name) }}" class="button" style="background-color: #17a2b8;">View</a>
+                            <!-- Form for toggling active status -->
+                            <form action="{{ url_for('toggle_department_status', department_id=dept.id) }}" method="post">
+                                <button type="submit" class="button button-secondary">{{ 'Deactivate' if dept.active else 'Activate' }}</button>
+                            </form>
+                            <!-- Form for permanent deletion -->
+                            <form action="{{ url_for('delete_department', department_id=dept.id) }}" method="post" onsubmit="return confirm('DANGER: This will permanently delete the department and all its content. Are you sure?');">
+                                <button type="submit" class="button button-danger">Delete</button>
+                            </form>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr><td colspan="3">No departments exist. Add one above.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
