@@ -5,21 +5,20 @@
     <title>User Management</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px;}
-        .main-content { max-width: 950px; margin: auto; }
+        .main-content { max-width: 1100px; margin: auto; }
         .container { border: 1px solid #dee2e6; padding: 20px; margin-bottom: 25px; border-radius: 8px; background: white; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border-bottom: 1px solid #e9ecef; text-align: left;}
+        th, td { padding: 12px; border-bottom: 1px solid #e9ecef; text-align: left; vertical-align: middle;}
         th { background-color: #f8f9fa;}
         td > form { margin-block-end: 0; }
         button, .button { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: 500; }
         input[type="text"], input[type="email"], input[type="password"], select { padding: 8px; border: 1px solid #ced4da; border-radius: 5px; margin-right: 5px;}
-        .button-primary { background-color: #007bff;}
-        .button-secondary { background-color: #6c757d; }
-        .button-danger { background-color: #dc3545; }
+        .button-primary { background-color: #007bff;} .button-secondary { background-color: #6c757d; }
+        .button-danger { background-color: #dc3545; } .button-success { background-color: #28a745; }
         .top-nav { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .flash { padding: 1rem; margin-bottom: 1rem; border-radius: 5px; text-align: center; }
-        .flash.success { color: #0f5132; background-color: #d1e7dd; }
-        .flash.danger { color: #842029; background-color: #f8d7da; }
+        .flash.success { color: #0f5132; background-color: #d1e7dd; } .flash.danger { color: #842029; background-color: #f8d7da; }
+        .status-locked { color: #dc3545; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -28,54 +27,67 @@
             <h1>User Management</h1>
             <a href="{{ url_for('admin_panel') }}" class="button button-secondary">← Back to Admin Panel</a>
         </div>
-        
         {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
-
         <div class="container">
             <h2>Add New User</h2>
             <form action="{{ url_for('add_user') }}" method="post" style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
-                <input type="text" name="username" placeholder="Username" required>
-                <input type="email" name="email" placeholder="Email" required>
+                <input type="text" name="username" placeholder="Username" required> <input type="email" name="email" placeholder="Email Address" required>
                 <input type="text" name="password" placeholder="Password" required>
                 <select name="role"><option value="user">User</option><option value="admin">Admin</option></select>
-                <select name="department_id">
-                    <option value="">-- No Department --</option>
-                    {% for dept in departments %}<option value="{{ dept.id }}">{{ dept.name }}</option>{% endfor %}
-                </select>
+                <select name="department_id"><option value="">-- No Department --</option>{% for dept in departments %}<option value="{{ dept.id }}">{{ dept.name }}</option>{% endfor %}</select>
                 <button type="submit" class="button-primary">Create User</button>
             </form>
         </div>
-        
         <div class="container">
             <h2>Existing Users</h2>
             <table>
-                <thead><tr><th>Username</th><th>Role</th><th>Department</th><th style="width: 350px;">Actions</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Username / Email</th>
+                        <th>Status</th>
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th style="width: 400px;">Actions</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% for u in users %}
                     <tr>
+                        <td>{{ u.username }} <br><small style="color:#6c757d;">{{u.email}}</small></td>
+                        <td>
+                            <!-- THE FIX IS HERE: Display the lock status -->
+                            {% if u.is_locked %}
+                                <span class="status-locked">LOCKED</span>
+                            {% else %}
+                                <span>Active</span>
+                            {% endif %}
+                        </td>
                         <form action="{{ url_for('edit_user', user_id=u.id) }}" method="post">
-                            <td>{{ u.username }} <br><small style="color:#6c757d;">{{u.email}}</small></td>
                             <td>
-                                <select name="role">
+                                <select name="role" {% if u.role == 'superadmin' %}disabled{% endif %}>
                                     <option value="user" {% if u.role=='user'%}selected{%endif%}>User</option>
                                     <option value="admin" {% if u.role=='admin'%}selected{%endif%}>Admin</option>
-                                    <option value="superadmin" {% if u.role=='superadmin'%}selected{%endif%}>Superadmin</option>
+                                    {% if u.role == 'superadmin' %}<option value="superadmin" selected>Superadmin</option>{% endif %}
                                 </select>
                             </td>
                             <td>
-                                <select name="department_id">
+                                <select name="department_id" {% if u.role == 'superadmin' %}disabled{% endif %}>
                                     <option value="" {% if not u.department_id %}selected{% endif %}>-- None --</option>
-                                    {% for dept in departments %}
-                                    <option value="{{ dept.id }}" {% if u.department_id == dept.id %}selected{% endif %}>{{ dept.name }}</option>
-                                    {% endfor %}
+                                    {% for dept in departments %}<option value="{{ dept.id }}" {% if u.department_id == dept.id %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}
                                 </select>
                             </td>
                             <td style="display:flex; gap: 5px;">
                                 <input type="text" name="password" placeholder="New Password (optional)" style="width: 150px;">
-                                <button type="submit">Update</button>
+                                <button type="submit" {% if u.role=='superadmin' %}disabled{%endif%}>Update</button>
                         </form>
-                        <form action="{{ url_for('delete_user', user_id=u.id) }}" method="post" onsubmit="return confirm('Delete this user? This cannot be undone!');">
-                            <button type="submit" class="button-danger" {% if u.role=='superadmin' %}disabled title="Cannot delete the superadmin account."{% endif %}>Delete</button>
+                        <!-- THE FIX IS HERE: Show the unlock button if the user is locked -->
+                        {% if u.is_locked %}
+                        <form action="{{ url_for('unlock_user', user_id=u.id) }}" method="post" style="display:inline-block;">
+                            <button type="submit" class="button-success">Unlock</button>
+                        </form>
+                        {% endif %}
+                        <form action="{{ url_for('delete_user', user_id=u.id) }}" method="post" onsubmit="return confirm('Permanently delete this user?');">
+                            <button type="submit" class="button-danger" {% if u.role=='superadmin' %}disabled{% endif %}>Delete</button>
                         </form>
                         </td>
                     </tr>

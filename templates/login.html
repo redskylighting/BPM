@@ -17,7 +17,14 @@
 <body>
     <div class="login-box">
         <h1>BPM System Login</h1>
-        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for c, m in messages %}
+              <div class="flash {{ c }}">{{ m }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <!-- THE FIX IS HERE: The form action now correctly points to the 'login' endpoint -->
         <form method="post" action="{{ url_for('login') }}">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+5<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,11 +17,11 @@
         .flash { padding: 1rem; margin-bottom: 1.5rem; border-radius: 5px; border: 1px solid transparent; font-weight: 500; }
         .flash.danger { color: #842029; background-color: #f8d7da; border-color: #ffc5ca; }
         ul {padding: 0;}
-        button, .button-sm { padding: 8px 12px; border:none; border-radius:5px; color:white; cursor:pointer; text-decoration: none; display:inline-block; }
+        button, .button-sm { padding: 8px 12px; border:none; border-radius:5px; color:white; cursor:pointer; text-decoration: none; display:inline-block; font-weight: 500;}
         .button-sm { font-size: 13px; padding: 5px 10px; }
     </style>
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-    <script>tinymce.init({selector: 'textarea#rich-text-editor', plugins: 'paste lists link image table code help wordcount', toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | indent outdent | bullist numlist | code | help', paste_data_images: true, height: 400 });</script>
+    <script src="https://cdn.tiny.cloud/1/rxpd1wvti3aak99ve4zvmz7nk5um46nr7i3utt4fthjaget8/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>tinymce.init({selector: 'textarea#rich-text-editor', plugins: 'paste lists link image table code help wordcount', toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | code | help', paste_data_images: true, height: 400 });</script>
 </head>
 <body>
     <div class="main-content">
@@ -32,6 +32,7 @@
         {% if can_edit %}
         <div class="container">
             <h2>Add New Post</h2>
+            <!-- This is now ONE form for text and file uploads -->
             <form method="post" enctype="multipart/form-data">
                 <h4>Rich Text Content</h4>
                 <textarea id="rich-text-editor" name="content"></textarea>
@@ -45,32 +46,27 @@
         <div class="container">
             <h2>Content & Processes</h2>
             <ul>
-                {% for post in menu.posts|sort(attribute='id', reverse=True) %}
-                  {% if post.active or can_edit %}
-                    <li id="post-{{ post.id }}" class="post-item {% if not post.active %}inactive{% endif %}">
-                        {% if can_edit %}
-                        <div class="actions">
-                            <form method="post" action="{{ url_for('toggle_post_status', post_id=post.id) }}"><button type="submit" class="button-sm" style="background-color:#6c757d;">{{'Deactivate' if post.active else 'Activate'}}</button></form>
-                        </div>
-                        {% endif %}
-                        
-                        {% if post.rich_content %}
-                            <div class="post-content">{{ post.rich_content | safe }}</div>
-                        {% endif %}
-
-                        {% if post.attachments %}
-                        <div class="post-attachments" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc;">
-                            <strong>Attachments:</strong>
-                            <ul>
-                                {% for attachment in post.attachments %}
-                                    <!-- THE FIX IS HERE: The link now correctly uses `file_id=attachment.id` -->
-                                    <li><a href="{{ url_for('download_file', file_id=attachment.id) }}">{{ attachment.filename }}</a></li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                    </li>
-                  {% endif %}
+                {% for post in posts %}
+                  <li id="post-{{ post.id }}" class="post-item {% if not post.active %}inactive{% endif %}">
+                      {% if can_edit %}
+                      <div class="actions">
+                          <form method="post" action="{{ url_for('toggle_post_status', post_id=post.id) }}"><button type="submit" class="button-sm" style="background-color:#6c757d;">{{'Deactivate' if post.active else 'Activate'}}</button></form>
+                          <!-- The delete button is now back -->
+                          <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}" onsubmit="return confirm('Delete this post?');"><button type="submit" class="button-sm" style="background-color:#dc3545;">Delete</button></form>
+                      </div>
+                      {% endif %}
+                      {% if post.rich_content %}<div class="post-content">{{ post.rich_content | safe }}</div>{% endif %}
+                      {% if post.attachments %}
+                      <div class="post-attachments" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc;">
+                          <strong>Attachments:</strong>
+                          <ul>
+                            {% for attachment in post.attachments %}
+                                <li><a href="{{ url_for('download_file', file_id=attachment.id) }}">{{ attachment.filename }}</a></li>
+                            {% endfor %}
+                          </ul>
+                      </div>
+                      {% endif %}
+                  </li>
                 {% else %}
                   <li>No content has been added for this menu yet.</li>
                 {% endfor %}

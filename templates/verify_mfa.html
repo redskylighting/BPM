@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Two-Factor Authentication</title>
+    <!-- Use same styles as login.html -->
+</head>
+<body>
+    <div class="login-box">
+        <h1>Check Your Email</h1>
+        <p style="text-align: center; color: #6c757d;">We've sent a 6-digit verification code to your registered email address.</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
+
+        <form method="post" action="{{ url_for('verify_mfa') }}">
+            <input type="text" name="mfa_code" placeholder="6-Digit Code" required pattern="\d{6}" maxlength="6" inputmode="numeric">
+            <button type="submit">Verify</button>
+        </form>
+    </div>
+</body>
+</html>
